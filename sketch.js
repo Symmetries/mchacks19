@@ -173,12 +173,42 @@ function attempt2(mx,my,x1,y1,x2,y2){
 	}
 }
 
-startButton = document.querySelector('#start-button');
-startButton.onclick = e => {
-	let p5Sketch = new p5(sketchFunction, 'p5sketch');
-	console.log("Start Button on click event");
-};
+window.onload = () => {
+  let db = firebase.firestore();
+  let startButton = document.querySelector('#start-button');
+  let createRoomButton = document.querySelector('#create-room-button');
+  let joinRoomButton = document.querySelector('#join-room-button');
+  let roomCodeP = document.querySelector('#room-code-p');
+  let roomCodeInput = document.querySelector('#room-code-input');
 
-
-
+  startButton.onclick = e => {
+    let p5Sketch = new p5(sketchFunction, 'p5sketch');
+    console.log("Start Button on click event");
+  };
+  console.log("window.onload");
+  createRoomButton.onclick = e => {
+    db.collection("rooms").add({
+      creator: "test"
+    }).then(docRef => {
+      console.log("Document written with ID: ", docRef.id);
+      roomCodeP.innerHTML = "Room Code: " + docRef.id;  
+    }).catch(error => {
+      console.error("Error adding document: ", error);
+    })
+  };
+  
+  joinRoomButton.onclick = e => {
+    let roomDocRef = db.collection("rooms").doc(roomCodeInput.value);
+    
+    roomDocRef.get().then(doc => {
+      if (doc.exists) {
+        console.log("Document data:", doc.data());
+      } else {
+        console.log("No such document!");
+      }
+    }).catch(error => {
+      console.log("Error getting document:", error);
+    });
+  }
+}
 
