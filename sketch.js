@@ -282,7 +282,7 @@ let finished = false;
 let guesses = [
   ["bread", "potato"],
   ["mushroom", "pinetree"],
-  ["lollipop", "coton candy"],
+  ["lollipop", "cotton candy"],
   ["snowman", "eight figure"]
 ];
 let choices;
