@@ -44,9 +44,10 @@ let sketchFunction = s => {
   s.draw = () => {
     let date = new Date();
     timeElapsed = date.getTime() - startTime;
-    s.print(timeElapsed);
+    if (timeElapsed % 100 == 0)
+      s.print(timeElapsed);
 
-    if (timeElapsed > 30000) {
+    if (timeElapsed > 5000) {
       timeOver();
       s.remove();
     }
@@ -68,7 +69,7 @@ let sketchFunction = s => {
     let bestPosRY;
     let bestPosLY;
 
-    if( poses.length > 0){
+    if(poses.length > 0){
       left_hand_X.push(poses[0].pose.keypoints[9].position.x);
       right_hand_X.push(poses[0].pose.keypoints[10].position.x);
       left_hand_Y.push(poses[0].pose.keypoints[9].position.y);
@@ -128,7 +129,7 @@ let sketchFunction = s => {
     var av=0;
     var s=0;
     for(i=0; i<pos.length; i++){
-        av = av + score[i]*pos[i];// * pow(2, -i);
+        av = av + score[i]*pos[i];
         s = s + score[i];
     }
     return av/s;
@@ -139,8 +140,9 @@ function timeOver() {
   roundStarted = false;
   if (isCreator) {
     turn++;
-    roomDocRef.update({turn: turn});
+    roomDocRef.update({status: "finished", turn: turn});
   }
+  console.log(turn, isCreator, roundStarted, isDrawing);
 }
 
 function updateLastPoint(points) {
@@ -165,13 +167,18 @@ function playTurn(data) {
         p5Sketch = new p5(sketchFunction, 'p5sketch');
       }
     } else if (!isDrawing) {
-      data.lastPoints.forEach(point => {
-        points.push(point);
-      });
+      if (data.lastPoints) {
+        data.lastPoints.forEach(point => {
+          points.push(point);
+        });
+      }
       leftChoiceButton.innerHTML = data.choices[0];
       rightChoiceButton.innerHTML = data.choices[1];
       correctChoice = data.correctChoice;
     }
+  } if (data.status == "finished") {
+    turn = data.turn;
+    data.status == "joined";
   }
 }
 
@@ -226,7 +233,6 @@ window.onload = () => {
       messageP.innerHTML = "Room Code: " + docRef.id;  
       docRef.onSnapshot(doc => {
         playTurn(doc.data());
-        console.log("Current data: ", doc.data());
       });
     }).catch(error => {
       console.error("Error adding document: ", error);
