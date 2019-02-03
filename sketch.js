@@ -33,7 +33,11 @@ let sketchFunction = s => {
 
 	s.setup = () => {
 		console.log("Sketch Setup() function")
-		s.createCanvas(640, 480);
+		var cnv=s.createCanvas(1000, 750);
+    var x = (s.windowWidth - s.width) / 2;
+    var y = (s.windowHeight - s.height+30) / 2;
+    cnv.position(x, y);
+    s.background(255, 255, 255);
 		video = s.createCapture(s.VIDEO);
 		video.size(s.width, s.height);
 
@@ -47,10 +51,11 @@ let sketchFunction = s => {
 	}
 
 	function modelReady() {
-		s.select('#status').html('Model Loaded');
+		// s.select('#status').html('Model Loaded');
 	}
 
 	s.draw = () => {
+    
 		drawKeypoints();
 	}
 
