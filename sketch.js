@@ -1,25 +1,43 @@
 let sketchFunction = s => {
-  let video;
-  let poseNet;
-  let poses = [];
-  let left_hand_X=[];
-  let right_hand_X=[];
-  let left_hand_Y=[];
-  let right_hand_Y=[];
-  let left_hand_score_X=[];
-  let right_hand_score_X=[];
-  let left_hand_score_Y=[];
-  let right_hand_score_Y=[];
-  let count = 0;
-  let numFrames = 60;
-  let lastAvgX = lastAvgY = NaN;
-  let lastPredX, lastPredY;
+	let video;
+	let poseNet;
+	let poses = [];
+	let left_hand_X=[];
+	let right_hand_X=[];
+	let left_hand_Y=[];
+	let right_hand_Y=[];
+	let left_hand_score_X=[];
+	let right_hand_score_X=[];
+	let left_hand_score_Y=[];
+	let right_hand_score_Y=[];
+	let count = 0;
+	let numFrames = 60;
+	let lastAvgX = lastAvgY = NaN;
+	let lastPredX, lastPredY;
+  //Teresa
+  let tmpArrayX = [];
+  let tmpArrayY = [];
+  let Mpt = [];
+  let r = 20;
+  let curbestPosRX;
+  let curbestPosLX;
+  let curbestPosRY;
+  let curbestPosLY;
+  let prevbestPosRX=null;
+  let prevbestPosLX=null;
+  let prevbestPosRY=null;
+  let prevbestPosLY=null;
+  //Diego
   let lastPoints = [];
   let startTime;
 
-  s.setup = () => {
-    s.createCanvas(640, 480);
-    if (isDrawing) {
+	s.setup = () => {
+		var cnv=s.createCanvas(800, 500);
+    var x = (s.windowWidth - s.width) / 2;
+    var y = (s.windowHeight - s.height+30) / 2;
+    cnv.position(x, y);
+    s.background(255, 255, 255);
+		if (isDrawing) {
       video = s.createCapture(s.VIDEO);
       video.size(s.width, s.height);
 
@@ -28,16 +46,14 @@ let sketchFunction = s => {
         poses = results;
       });
       video.hide();
-      button = s.createButton('end');
-      button.mousePressed(() => s.remove());
     }
 
     let date = new Date();
     startTime = date.getTime();
-  }
+	}
 
   function modelReady() {
-    //s.select('#status').html('Model Loaded');
+
   }
 
   s.draw = () => {
@@ -65,68 +81,104 @@ let sketchFunction = s => {
       points.forEach(point => s.vertex(point.x, point.y));
       s.endShape();
     }
+	}
+
+  //attempt one to make the lines smoother...
+function attempt1(mx,my,x1,y1,x2,y2){
+  if(x1==null&& y1==null){
+    Mpt[0]=x2;
+    Mpt[1]=y2;
   }
+  else if(x1 != x2 || y1 != y2){
+      if(attempt2(mx, my,x1,y1,x2, y2)!=0){
+      
+        Mpt[0]=(x1+x2)/2;
+        Mpt[1]=(y1+y2)/2;
+      }
+  }
+}
 
-  function drawKeypoints()  {
-    let bestPosRX;
-    let bestPosLX;
-    let bestPosRY;
-    let bestPosLY;
+//This function takes the coordiantes of the m point from attempt1 and checks for outliers
+//If an outlier is found, it checks if there is at least another outlier. If it is the case, it does nothing (you should apply attempt1 after this method. 
+//If not it just increments the x coordinate of m by x1.
+function attempt2(mx,my,x1,y1,x2,y2){
+  var dist1 = s.dist(mx,my,x1,y1);
+  var dist2 = s.dist(mx,my,x2,y2);
+  if(dist1 > r && dist2 >r){
+    //do nothing
+    return 1;
+  }
+  else{
+    Mpt.push(mx + x1);
+    Mpt.push(my);
+    return 0;
+  }
+}
 
-    if(poses.length > 0){
-      left_hand_X.push(poses[0].pose.keypoints[9].position.x);
-      right_hand_X.push(poses[0].pose.keypoints[10].position.x);
-      left_hand_Y.push(poses[0].pose.keypoints[9].position.y);
-      right_hand_Y.push(poses[0].pose.keypoints[10].position.y);
-      left_hand_score_X.push(poses[0].pose.keypoints[9].score);
-      right_hand_score_X.push(poses[0].pose.keypoints[10].score);
-      left_hand_score_Y.push(poses[0].pose.keypoints[9].score);
-      right_hand_score_Y.push(poses[0].pose.keypoints[10].score);
+function drawKeypoints()  {
 
-      if(count == numFrames){
-        bestPosRX=averageW(right_hand_X,right_hand_score_X);
-        bestPosLX=averageW(left_hand_X, left_hand_score_X);
-        bestPosRY=averageW(right_hand_Y, right_hand_score_Y);
-        bestPosLY=averageW(left_hand_Y, left_hand_score_Y);
+		if( poses.length > 0){
+			left_hand_X.push(poses[0].pose.keypoints[9].position.x);
+			right_hand_X.push(poses[0].pose.keypoints[10].position.x);
+			left_hand_Y.push(poses[0].pose.keypoints[9].position.y);
+			right_hand_Y.push(poses[0].pose.keypoints[10].position.y);
+			left_hand_score_X.push(poses[0].pose.keypoints[9].score);
+			right_hand_score_X.push(poses[0].pose.keypoints[10].score);
+			left_hand_score_Y.push(poses[0].pose.keypoints[9].score);
+			right_hand_score_Y.push(poses[0].pose.keypoints[10].score);
 
-        let curAvgX = s.width - bestPosRX;
-        let curAvgY = bestPosRY;
-        let curPredX = s.width - poses[0].pose.keypoints[10].position.x;
-        let curPredY = poses[0].pose.keypoints[10].position.y;
-        
-        lastPoints.push({x: curAvgX, y: curAvgY});
+			if(count == numFrames){
+				// if(random() < 0.01){
+				//     print(poses);
+				// }
+				curbestPosRX=averageW(right_hand_X,right_hand_score_X);
+        curbestPosLX=averageW(left_hand_X, left_hand_score_X);
+        curbestPosRY=averageW(right_hand_Y, right_hand_score_Y);
+        curbestPosLY=averageW(left_hand_Y, left_hand_score_Y);
+
+        attempt1(Mpt[0],Mpt[1],prevbestPosRX, prevbestPosRY, curbestPosRX, curbestPosRY);
+
+        prevbestPosRX = curbestPosRX;
+        prevbestPosRY = curbestPosRY;
+
+				let curAvgX = s.width - curbestPosRX;
+        let curAvgY = curbestPosRY;
+				let curPredX = s.width - poses[0].pose.keypoints[10].position.x;
+				let curPredY = poses[0].pose.keypoints[10].position.y;
+
+			lastPoints.push({x: curAvgX, y: curAvgY});
         if (lastPoints.length == 10) {
           updateLastPoint(lastPoints);
             lastPoints = [];
         }
 
-        if (lastAvgX != NaN) {
-          s.strokeWeight(10);
-          s.stroke(255, 204, 0);
-          s.line(lastAvgX,lastAvgY, curAvgX, curAvgY);
-          // stroke(0);
-          // line(lastPredX, lastPredY, curPredX, curPredY);
-        }
-  
-        lastAvgX = curAvgX;
-        lastAvgY = curAvgY;
-        lastPredX = curPredX;
-        lastPredY = curPredY;
 
-        left_hand_X.shift();
-        right_hand_X.shift();
-        left_hand_Y.shift();
-        right_hand_Y.shift();
-        left_hand_score_X.shift();
-        right_hand_score_X.shift();
-        left_hand_score_Y.shift();
-        right_hand_score_Y.shift();
-        count--;
-      }
+				if (lastAvgX != NaN) {
+					s.strokeWeight(10);
+					s.stroke(255, 204, 0);
+					s.line(lastAvgX,lastAvgY, curAvgX, curAvgY);
+					// stroke(0);
+					// line(lastPredX, lastPredY, curPredX, curPredY);
+				}
+				lastAvgX = curAvgX;
+				lastAvgY = curAvgY;
+				lastPredX = curPredX;
+				lastPredY = curPredY;
 
-      count ++;
-    }
-  }
+				left_hand_X.shift();
+				right_hand_X.shift();
+				left_hand_Y.shift();
+				right_hand_Y.shift();
+				left_hand_score_X.shift();
+				right_hand_score_X.shift();
+				left_hand_score_Y.shift();
+				right_hand_score_Y.shift();
+				count--;
+			}
+
+			count ++;
+		}
+	}
 
   //A function to get the weighted average 
   function averageW(pos, score){
@@ -159,9 +211,12 @@ function playTurn(data) {
         choices = choose(guesses);
         correctChoice = choose(choices);
         p5Sketch = new p5(sketchFunction, 'p5sketch');
+        document.querySelector("#room-code-input").style.display = 'none';
         roomDocRef.update({choices: choices, correctChoice: correctChoice});
       } else {
         p5Sketch = new p5(sketchFunction, 'p5sketch');
+        document.querySelector("#room-code-input").style.display = 'none';
+        document.querySelector(".twoButtons").style.display = 'flex';
       }
     } else if (!isDrawing) {
       if (data.lastPoints) {
@@ -212,7 +267,6 @@ function lose() {
 
 let db;
 let p5Sketch
-let startButton;
 let createRoomButton;
 let joinRoomButton;
 let leftChoiceButton;
@@ -227,7 +281,9 @@ let roomDocRef;
 let finished = false;
 let guesses = [
   ["bread", "potato"],
-  ["mushroom", "pinetree"]
+  ["mushroom", "pinetree"],
+  ["lollipop", "coton candy"],
+  ["snowman", "eight figure"]
 ];
 let choices;
 let correctChoice;
@@ -237,17 +293,12 @@ let turn;
 
 window.onload = () => {
   db = firebase.firestore();
-  startButton = document.querySelector('#start-button');
   createRoomButton = document.querySelector('#create-room-button');
   joinRoomButton = document.querySelector('#join-room-button');
   messageP = document.querySelector('#message-p');
   roomCodeInput = document.querySelector('#room-code-input');
   leftChoiceButton = document.querySelector('#right-choice-button');
   rightChoiceButton = document.querySelector('#left-choice-button');
-
-  startButton.onclick = () => {
-    p5Sketch = new p5(sketchFunction, 'p5sketch');
-  };
 
   createRoomButton.onclick = () => {
     db.collection("rooms").add({
@@ -307,3 +358,4 @@ window.onload = () => {
     }
   }
 }
+

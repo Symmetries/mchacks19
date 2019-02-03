@@ -19,18 +19,50 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.sound.min.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="sketch.js"></script>
+
     <meta charset="utf-8" />
   </head>
   <body>
+    
     <p id="status"></p>
-    <button id="start-button"> Start </button>
-    <button id="create-room-button"> Create Room </button>
-    <button id="join-room-button"> Join Room </button> <br>
-    <input id="room-code-input" type="text"> 
-    <button id="left-choice-button"></button>
-    <button id="right-choice-button"></button>
-    <p id="message-p"></p>
-    <div id="p5sketch"></div>
-    <script src="sketch.js"></script>
+    <div class="container">
+      <div class="child">
+      <header><h1>PoseArt!</h1> </header>
+    </div>
+      <div>
+        <button id="create-room-button"> Create Room </button>
+      </div>
+      <div >
+        <button id="join-room-button"> Join Room </button> <br>
+      </div>
+       <div>
+      <div align-items="center", display="block">
+        <input id="room-code-input" type="text" placeholder="Enter your code here..." style="width: 100%;" >
+      </div>
+        <p id="room-code-p"></p>
+        <p id="message-p"></p>
+      </div>
+      
+
+    <div class="twoButtons" display="none"> 
+      <div>
+        <button id="left-choice-button"></button>
+      </div>
+      <div>
+        <button id="right-choice-button"></button>
+      </div>
+    </div>
+
+    </div>
+
+    
+    <!-- <button id="start-button"> Start </button> -->
+   
+    <div id="p5sketch" class="container"></div>   
+    
+    
+    
   </body>
 </html>
