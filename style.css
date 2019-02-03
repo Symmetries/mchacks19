@@ -70,9 +70,16 @@ input[type=text], select {
   font-size:44px
 }
 
-.bigitem { 
-  flex-basis: 1;
-} /* flex-grow, flex-shrink, flex-basis */
+.twoButtons{
+  flex:1;
+  /* display:flex; */
+  flex-direction: row;
+  /* flex-basis:auto; */
+  /* flex-wrap: wrap; */
+  justify-content: center;/*main axis (vertically)*/
+  align-items:flex-start;/*cross axis (horizontal)*/
+  display: none;
+}
 
 
 
