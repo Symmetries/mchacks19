@@ -18,7 +18,6 @@ let sketchFunction = s => {
   let startTime;
 
   s.setup = () => {
-    console.log("Sketch Setup() function")
     s.createCanvas(640, 480);
     if (isDrawing) {
       video = s.createCapture(s.VIDEO);
@@ -38,16 +37,21 @@ let sketchFunction = s => {
   }
 
   function modelReady() {
-    s.select('#status').html('Model Loaded');
+    //s.select('#status').html('Model Loaded');
   }
 
   s.draw = () => {
+    if (finished) s.remove();
     let date = new Date();
     timeElapsed = date.getTime() - startTime;
     if (timeElapsed % 100 == 0)
       s.print(timeElapsed);
-
-    if (timeElapsed > 5000) {
+    let limit = 15
+    if (isDrawing) 
+      message("You have " + s.floor(limit - timeElapsed/1000) + " seconds to draw a(n) " + correctChoice);
+    else
+      message("You have " + s.floor(limit - timeElapsed/1000) + " to guess what is drawn");
+    if (timeElapsed > limit * 1000) {
       timeOver();
       s.remove();
     }
@@ -137,12 +141,8 @@ let sketchFunction = s => {
 }
 
 function timeOver() {
-  roundStarted = false;
-  if (isCreator) {
-    turn++;
-    roomDocRef.update({status: "finished", turn: turn});
-  }
-  console.log(turn, isCreator, roundStarted, isDrawing);
+  roomDocRef.update({status: "finished"});
+  message("Time is Over, You Have Lost :(");
 }
 
 function updateLastPoint(points) {
@@ -158,12 +158,9 @@ function playTurn(data) {
       if (isDrawing) {
         choices = choose(guesses);
         correctChoice = choose(choices);
-        messageP.innerHTML = "You have 30 seconds to draw a(n) " +
-           correctChoice;
         p5Sketch = new p5(sketchFunction, 'p5sketch');
         roomDocRef.update({choices: choices, correctChoice: correctChoice});
       } else {
-        messageP.innerHTML = "You have 30 seconds to guess what is being drawn";
         p5Sketch = new p5(sketchFunction, 'p5sketch');
       }
     } else if (!isDrawing) {
@@ -176,14 +173,41 @@ function playTurn(data) {
       rightChoiceButton.innerHTML = data.choices[1];
       correctChoice = data.correctChoice;
     }
-  } if (data.status == "finished") {
-    turn = data.turn;
-    data.status == "joined";
+  } else if (data.status == "finished" && isCreator) {
+    userChoice = data.userChoice;
+    console.log(data)
+    if (userChoice == correctChoice) {
+      win();
+    } else {
+      lose();
+    }
   }
+}
+
+function message(str) {
+  messageP.innerHTML = str;
 }
 
 function choose(choices) {
   return choices[Math.floor(Math.random() * choices.length)];
+}
+
+function win() {
+  setTimeout(() => message("Congratulations, you have won!"), 1000);
+  console.log(userChoice);
+  finished = true;
+  if (!isCreator) {
+    roomDocRef.update({status: "finished", userChoice: userChoice});
+  }
+}
+
+function lose() {
+  setTimeout(() => message("Did not guess " + correctChoice + ", you have lost"), 1000);
+  console.log(userChoice);
+  finished = true;
+  if (!isCreator) {
+    roomDocRef.update({status: "finished", userChoice: userChoice});
+  }
 }
 
 let db;
@@ -200,6 +224,7 @@ let roundStarted = false;
 let isDrawing = false;
 let points = [];
 let roomDocRef;
+let finished = false;
 let guesses = [
   ["bread", "potato"],
   ["mushroom", "pinetree"]
@@ -262,5 +287,23 @@ window.onload = () => {
       console.log("Error getting document:", error);
       messageP.innerHTML = "Connection Error, Please Try Again";
     });
+  }
+
+  rightChoiceButton.onclick = () => {
+    userChoice = rightChoiceButton.innerHTML;
+    if (rightChoiceButton.innerHTML == correctChoice) {
+      win();
+    } else {
+      lose();
+    }
+  }
+
+  leftChoiceButton.onclick = () => {
+    userChoice = leftChoiceButton.innerHTML;
+    if (leftChoiceButton.innerHTML == correctChoice) {
+      win();
+    } else {
+      lose();
+    }
   }
 }
