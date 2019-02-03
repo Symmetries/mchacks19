@@ -16,6 +16,18 @@ let count = 0;
 let numFrames = 60;
 let lastAvgX = lastAvgY = NaN;
 let lastPredX, lastPredY;
+let tmpArrayX = [];
+let tmpArrayY = [];
+let Mpt = [];
+let r = 20;
+let curbestPosRX;
+let curbestPosLX;
+let curbestPosRY;
+let curbestPosLY;
+let prevbestPosRX=null;
+let prevbestPosLX=null;
+let prevbestPosRY=null;
+let prevbestPosLY=null;
 
 
 function setup() {
@@ -33,7 +45,7 @@ function setup() {
   });
    //console.log(poseNet);
   // Hide the video element, and just show the canvas
-  video.hide();
+  //video.hide();
 }
 
 function modelReady() {
@@ -50,10 +62,7 @@ function draw() {
 
 // A function to draw ellipses over the detected keypoints
 function drawKeypoints()  {
-  let bestPosRX;
-  let bestPosLX;
-  let bestPosRY;
-  let bestPosLY;
+  
 
   if( poses.length > 0){
     
@@ -73,15 +82,23 @@ function drawKeypoints()  {
       // if(random() < 0.01){
       //     print(poses);
       // }
-      bestPosRX=averageW(right_hand_X,right_hand_score_X);
-      bestPosLX=averageW(left_hand_X, left_hand_score_X);
-      bestPosRY=averageW(right_hand_Y, right_hand_score_Y);
-      bestPosLY=averageW(left_hand_Y, left_hand_score_Y);
 
-      let curAvgX = width - bestPosRX;
-      let curAvgY = bestPosRY;
-      let curPredX = width - poses[0].pose.keypoints[10].position.x;
-      let curPredY = poses[0].pose.keypoints[10].position.y;
+
+      curbestPosRX=averageW(right_hand_X,right_hand_score_X);
+      curbestPosLX=averageW(left_hand_X, left_hand_score_X);
+      curbestPosRY=averageW(right_hand_Y, right_hand_score_Y);
+      curbestPosLY=averageW(left_hand_Y, left_hand_score_Y);
+      
+      attempt1(Mpt[0],Mpt[1],prevbestPosRX, prevbestPosRY, curbestPosRX, curbestPosRY);
+
+      prevbestPosRX = curbestPosRX;
+      prevbestPosRY = curbestPosRY;
+      //TODO: supdate left too 
+
+      let curAvgX = width - curbestPosRX;
+      let curAvgY = curbestPosRY;
+      // let curPredX = width - poses[0].pose.keypoints[10].position.x;
+      // let curPredY = poses[0].pose.keypoints[10].position.y;
 
 
 
@@ -94,7 +111,7 @@ function drawKeypoints()  {
       // ellipse(width - poses[0].pose.keypoints[10].position.x,poses[0].pose.keypoints[10].position.y,10); // right
       //print bestPos
       fill(255, 204, 0);
-      ellipse(width-bestPosRX,bestPosRY,10);
+      ellipse(width-curbestPosRX,curbestPosRY,10);
       fill(255, 204, 0);
       // ellipse(width-bestPosLX,bestPosLY,30);
 
@@ -108,8 +125,8 @@ function drawKeypoints()  {
       }
       lastAvgX = curAvgX;
       lastAvgY = curAvgY;
-      lastPredX = curPredX;
-      lastPredY = curPredY;
+      // lastPredX = curPredX;
+      // lastPredY = curPredY;
 
     
       
@@ -156,5 +173,42 @@ function drawSkeleton() {
       stroke(255, 0, 0);
       // line(partA.position.x, partA.position.y, partB.position.x, partB.position.y);
     }
+  }
+}
+
+//attempt one to make the lines smoother...
+function attempt1(mx,my,x1,y1,x2,y2){
+  // var avX=0;
+  // var avY=0;
+  // var curX = x[0];
+  // var curY = y[0];
+  if(x1==null&& y1==null){
+    Mpt[0]=x2;
+    Mpt[1]=y2;
+
+  }
+  else if(x1 != x2 || y1 != y2){
+      if(attempt2(mx, my,x1,y1,x2, y2)!=0){
+      
+        Mpt[0]=(x1+x2)/2;
+        Mpt[1]=(y1+y2)/2;
+      }
+    }
+  
+}
+//This function takes the coordiantes of the m point from attempt1 and checks for outliers
+//If an outlier is found, it checks if there is at least another outlier. If it is the case, it does nothing (you should apply attempt1 after this method. 
+//If not it just increments the x coordinate of m by x1.
+function attempt2(mx,my,x1,y1,x2,y2){
+  var dist1 = dist(mx,my,x1,y1);// sqrt(pow(mx-x1,2) + pow(my-y1,2));
+  var dist2 = dist(mx,my,x2,y2);//(sqrt(pow(mx-x2,2) + pow(my-y2,2));
+  if(dist1 > r && dist2 >r){
+    //do nothing
+    return 1;
+  }
+  else{
+    Mpt.push(mx + x1);
+    Mpt.push(my);
+    return 0;
   }
 }
