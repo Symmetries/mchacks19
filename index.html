@@ -1,16 +1,30 @@
 <!DOCTYPE html>
 <html>
   <head>
+		<script src="https://www.gstatic.com/firebasejs/5.8.2/firebase.js"></script>
+		<script>
+			// Initialize Firebase
+			var config = {
+				apiKey: "AIzaSyD2-HTfGHoA1FKB2PIfrq9rRRIN1if8d_Y",
+				authDomain: "mchacks19.firebaseapp.com",
+				databaseURL: "https://mchacks19.firebaseio.com",
+				projectId: "mchacks19",
+				storageBucket: "mchacks19.appspot.com",
+				messagingSenderId: "354322661774"
+			};
+			firebase.initializeApp(config);
+		</script>
     <script src="https://unpkg.com/ml5@0.1.3/dist/ml5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.sound.min.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
     <meta charset="utf-8" />
-
   </head>
   <body>
     <p id="status"></p>
+		<button id="start-button"> Start </button>
+		<div id="p5sketch"></div>
     <script src="sketch.js"></script>
   </body>
 </html>
