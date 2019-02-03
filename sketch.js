@@ -1,4 +1,3 @@
-
 let sketchFunction = s => {
 	let video;
 	let poseNet;
